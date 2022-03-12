@@ -1,122 +1,135 @@
 package main
 
-import (
-	"context"
-	"fmt"
+func findAllResiduos() []interface{} {
+	// use ConnectMySQLDB to connect to the database and query all data from table residuos
 
-	"cloud.google.com/go/firestore"
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
-)
+	conn := ConnectMySQLDB()
+	sqlQuery := `SELECT
+								R.id,
+								R.nombre,
+								D.nombre,
+								R.impacto,
+								R.aprovechamiento,
+								R.descripcion
+							FROM
+								residuos R,
+								destinos D
+							WHERE
+								R.id_destino = D.id;`
 
-var fsjson = getEnv("FS_JSON", "")
-var projectID = getEnv("FS_PROJECT_ID", "")
-
-func findAll(collection string) []interface{} {
-	ctx := context.Background()
-	client, err := firestore.NewClient(ctx, projectID, option.WithCredentialsFile(fsjson))
+	rows, err := conn.Query(sqlQuery)
 	if err != nil {
-		return nil
+		panic(err.Error())
 	}
-	defer client.Close()
-
-	iter := client.Collection(collection).Documents(ctx)
-	var docs []interface{}
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
+	defer conn.Close()
+	// iterate over the rows using struct residuo
+	var result []interface{}
+	for rows.Next() {
+		var r residuo
+		// scan the current row into the struct transforming claves into an array of strings
+		err = rows.Scan(&r.Id, &r.Nombre, &r.Destino, &r.Impacto, &r.Aprovechamiento, &r.Descripcion)
 		if err != nil {
-			return nil
+			panic(err.Error())
 		}
-		docs = append(docs, doc.Data())
+		// query the claves table and get the claves for the current residuo
+		sqlQuery := `SELECT
+										C.clave as claves
+									FROM
+										residuos R,
+										claves C,
+										clave_residuo CR
+									WHERE
+										CR.id_residuo = R.id
+									AND
+										CR.id_clave = C.id
+									AND R.id = ?;`
+		rowsClaves, err := conn.Query(sqlQuery, r.Id)
+		if err != nil {
+			panic(err.Error())
+		}
+		var claves []string
+		for rowsClaves.Next() {
+			var c clave
+			err = rowsClaves.Scan(&c.Clave)
+			if err != nil {
+				panic(err.Error())
+			}
+			claves = append(claves, c.Clave)
+		}
+		// add the claves array to the residuo struct
+		r.Claves = claves
+		// add the residuo struct to the result array
+		result = append(result, r)
 	}
-	return docs
+	return result
 }
 
-func save(data interface{}, collection string) bool {
-	ctx := context.Background()
-	client, err := firestore.NewClient(ctx, projectID, option.WithCredentialsFile(fsjson))
+func findResiduosByClave(keyword string) interface{} {
+	// use ConnectMySQLDB to connect to the database and query all data from table residuos where clave LIKE %keyword%
+
+	conn := ConnectMySQLDB()
+	sqlQuery := `SELECT
+								R.id,
+								R.nombre,
+								D.nombre,
+								R.impacto,
+								R.aprovechamiento,
+								R.descripcion
+							FROM
+								residuos R,
+								destinos D,
+								clave_residuo CR,
+								claves C
+							WHERE
+								CR.id_residuo = R.id
+							AND
+								CR.id_clave = C.id
+							AND R.id_destino = D.id
+							AND C.clave LIKE ?;`
+	rows, err := conn.Query(sqlQuery, "%"+keyword+"%")
+
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
-
-	defer client.Close()
-
-	_, _, err = client.Collection(collection).Add(ctx, data)
-
-	if err != nil {
-		panic(err)
-	}
-	return true
-}
-
-func saveAll(data []dataInterface, collection string) bool {
-	ctx := context.Background()
-	client, err := firestore.NewClient(ctx, projectID, option.WithCredentialsFile(fsjson))
-	if err != nil {
-		panic(err)
-	}
-
-	defer client.Close()
-
-	batch := client.Batch()
-
-	// Add all documents in a batch if field nombre doesnt exist in collection
-	collectionRef := client.Collection(collection)
-	operationCount := 0
-	for _, d := range data {
-		_, err := client.Collection(collection).Doc(d.NombreResiduo()).Get(ctx)
+	defer conn.Close()
+	// iterate over the rows using struct residuo
+	var result []interface{}
+	for rows.Next() {
+		var r residuo
+		// scan the current row into the struct transforming claves into an array of strings
+		err = rows.Scan(&r.Id, &r.Nombre, &r.Destino, &r.Impacto, &r.Aprovechamiento, &r.Descripcion)
 		if err != nil {
-			batch.Set(collectionRef.Doc(d.NombreResiduo()), d)
-			operationCount++
+			panic(err.Error())
 		}
-	}
-
-	if operationCount > 0 {
-		_, err = batch.Commit(ctx)
+		// query the claves table and get the claves for the current residuo
+		sqlQuery := `SELECT
+										C.clave as claves
+									FROM
+										residuos R,
+										claves C,
+										clave_residuo CR
+									WHERE
+										CR.id_residuo = R.id
+									AND
+										CR.id_clave = C.id
+									AND R.id = ?;`
+		rowsClaves, err := conn.Query(sqlQuery, r.Id)
 		if err != nil {
-			panic(err)
+			panic(err.Error())
 		}
-	}
-
-	return true
-
-}
-
-func findBy(collection string, field string, keyword string, isArrayCompare bool) []interface{} {
-	ctx := context.Background()
-	client, err := firestore.NewClient(ctx, projectID, option.WithCredentialsFile(fsjson))
-	if err != nil {
-		panic(err)
-	}
-
-	defer client.Close()
-
-	query := client.Collection(collection)
-
-	if isArrayCompare {
-		query.Where(field, "array-contains-any", keyword)
-		fmt.Println("keyword: ", keyword)
-	} else {
-		query.Where(field, "==", keyword)
-	}
-
-	iter := query.Documents(ctx)
-	var results []interface{}
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
+		var claves []string
+		for rowsClaves.Next() {
+			var c clave
+			err = rowsClaves.Scan(&c.Clave)
+			if err != nil {
+				panic(err.Error())
+			}
+			claves = append(claves, c.Clave)
 		}
-		if err != nil {
-			panic(err)
-		}
-
-		results = append(results, doc.Data())
+		// add the claves array to the residuo struct
+		r.Claves = claves
+		// add the residuo struct to the result array
+		result = append(result, r)
 	}
-
-	return results
-
+	return result
 }

@@ -10,7 +10,11 @@ type dataInterface interface {
 	NombreResiduo() string
 }
 
+type clave struct {
+	Clave string `json:"clave"`
+}
 type residuo struct {
+	Id              int      `json:"id"`
 	Nombre          string   `json:"nombre"`
 	Claves          []string `json:"claves"`
 	Destino         string   `json:"destino"`
@@ -34,7 +38,7 @@ func main() {
 
 	r.GET("/residuos/", getAllResiduos)
 	r.GET("/residuos/:clave", findByClave)
-	r.POST("/residuos/add", addResiduo)
+	/*	r.POST("/residuos/add", addResiduo)*/
 
 	// Upload route
 	r.LoadHTMLFiles("public/upload.html")
@@ -43,7 +47,7 @@ func main() {
 		c.HTML(http.StatusOK, "upload.html", nil)
 	})
 
-	r.POST("/upload", upload)
+	//r.POST("/upload", upload)
 	r.StaticFS("/files", http.Dir("files"))
 
 	r.Run(":8080")

@@ -6,15 +6,17 @@ import (
 
 func getAllResiduos(c *gin.Context) {
 
-	result := findAll("residuos")
+	result := findAllResiduos()
 	c.IndentedJSON(200, result)
 }
 
 func findByClave(c *gin.Context) {
-	result := findBy("residuos", "Claves", c.Param("clave"), true)
+	result := findResiduosByClave(c.Param("clave"))
 	c.IndentedJSON(200, result)
 }
 
+/*
 func addResiduo(c *gin.Context) {
 	return
 }
+*/

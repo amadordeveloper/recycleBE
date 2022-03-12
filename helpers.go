@@ -1,17 +1,11 @@
 package main
 
 import (
-	"io"
+	"database/sql"
 	"math/rand"
 	"os"
-	"strings"
 
-	"fmt"
-	"net/http"
-
-	"encoding/csv"
-
-	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -27,6 +21,7 @@ func getEnv(key, fallback string) string {
 	return value
 }
 
+/*
 func upload(c *gin.Context) {
 	//file, header, err := c.Request.FormFile("file")
 	file, _, err := c.Request.FormFile("file")
@@ -81,22 +76,9 @@ func upload(c *gin.Context) {
 		}
 	}
 
-	/* // save file to server
-	filename := header.Filename
-	out, err := os.Create("files/" + filename)
-	if err != nil {
-		panic(err)
-	}
-	defer out.Close()
-	_, err = io.Copy(out, file)
-	if err != nil {
-		panic(err)
-	}
-	filepath := "http://localhost:8080/files/" + filename
-	c.JSON(http.StatusOK, gin.H{"filepath": filepath})*/
 
 	c.String(http.StatusOK, "finalizado")
-}
+}*/
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -106,4 +88,29 @@ func randSeq(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func ConnectMySQLDB() *sql.DB {
+	// connect to mysql
+
+	Host := getEnv("DB_HOST", "")
+	Port := getEnv("DB_PORT", "")
+	User := getEnv("DB_USER", "")
+	Pass := getEnv("DB_PASS", "")
+	DBName := getEnv("DB_NAME", "")
+
+	if Host == "" || Port == "" || User == "" || Pass == "" || DBName == "" {
+		panic("No se encontro la variable de entorno para la conexion a la base de datos")
+	}
+
+	db, err := sql.Open("mysql", User+":"+Pass+"@tcp("+Host+":"+Port+")/"+DBName+"?charset=utf8")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	err = db.Ping()
+	if err != nil {
+		panic(err.Error())
+	}
+	return db
 }
