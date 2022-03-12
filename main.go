@@ -16,6 +16,7 @@ type residuo struct {
 	Destino         string   `json:"destino"`
 	Impacto         string   `json:"impacto"`
 	Aprovechamiento string   `json:"aprovechamiento"`
+	Descripcion     string   `json:"descripcion"`
 }
 
 /* Add methods */

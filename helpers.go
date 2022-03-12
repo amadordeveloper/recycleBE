@@ -63,6 +63,7 @@ func upload(c *gin.Context) {
 			Destino:         record[3],
 			Impacto:         record[2],
 			Aprovechamiento: record[4],
+			Descripcion:     record[5],
 		}
 
 		LoteResiduos = append(LoteResiduos, res)
