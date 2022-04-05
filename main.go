@@ -23,6 +23,30 @@ type residuo struct {
 	Descripcion     string   `json:"descripcion"`
 }
 
+type tip struct {
+	Id  int    `json:"id"`
+	Tip string `json:"tip"`
+}
+
+type puntoLimpio struct {
+	Id          int     `json:"id"`
+	Nombre      string  `json:"nombre"`
+	Latitud     float64 `json:"latitud"`
+	Longitud    float64 `json:"longitud"`
+	Descripcion string  `json:"descripcion"`
+}
+
+type recoleccionData struct {
+	Tipo        string `json:"tipo"`
+	Peso        string `json:"peso"`
+	Dimensiones string `json:"dimensiones"`
+	Direccion   string `json:"direccion"`
+	Ciudad      string `json:"ciudad"`
+	Nombre      string `json:"nombre"`
+	Correo      string `json:"correo"`
+	Telefono    string `json:"telefono"`
+}
+
 /* Add methods */
 func (s residuo) NombreResiduo() string {
 	return s.Nombre
@@ -36,19 +60,24 @@ func main() {
 		c.String(http.StatusOK, "Silence is golden")
 	})
 
+	// Residuos
 	r.GET("/residuos/", getAllResiduos)
 	r.GET("/residuos/:clave", findByClave)
-	/*	r.POST("/residuos/add", addResiduo)*/
 
-	// Upload route
-	r.LoadHTMLFiles("public/upload.html")
+	// Tips
+	r.GET("/tips/", getAllTips)
+	r.GET("/tips/random", getRandomTip)
 
-	r.GET("/importer", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "upload.html", nil)
+	// PuntoLimpio
+	r.GET("/puntosLimpios/", getAllPuntosLimpios)
+
+	// Recoleccion
+	r.POST("/recoleccion/", sendRecoleccionDataToEmail)
+
+	// handler mostrar imagen desde el servidor
+	r.GET("/archivos/:folder/:name", func(c *gin.Context) {
+		c.File("public/archivos/" + c.Param("folder") + "/" + c.Param("name"))
 	})
-
-	//r.POST("/upload", upload)
-	r.StaticFS("/files", http.Dir("files"))
 
 	r.Run(":8080")
 }

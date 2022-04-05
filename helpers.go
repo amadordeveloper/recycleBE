@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"log"
 	"math/rand"
+	"net/smtp"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -113,4 +115,24 @@ func ConnectMySQLDB() *sql.DB {
 		panic(err.Error())
 	}
 	return db
+}
+
+func sendEmail() bool {
+	from := getEnv("EMAIL_USER", "")
+	password := getEnv("EMAIL_PASS", "")
+	to := []string{"jota5557apolo@gmail.com"}
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+
+	message := []byte("My super secret message.")
+
+	// Create authentication
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	// Send actual message
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return true
 }

@@ -133,3 +133,128 @@ func findResiduosByClave(keyword string) interface{} {
 	}
 	return result
 }
+
+func findAllTips() []interface{} {
+	// use ConnectMySQLDB to connect to the database and query all data from table tips
+	conn := ConnectMySQLDB()
+	sqlQuery := `SELECT
+								T.id,
+								T.tip
+							FROM
+								tips T;`
+	rows, err := conn.Query(sqlQuery)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer conn.Close()
+	// iterate over the rows using struct tip
+	var result []interface{}
+	for rows.Next() {
+		var t tip
+		// scan the current row into the struct
+		err = rows.Scan(&t.Id, &t.Tip)
+		if err != nil {
+			panic(err.Error())
+		}
+		// add the tip struct to the result array
+		result = append(result, t)
+	}
+	return result
+}
+
+func findRandomTip() []interface{} {
+	// use ConnectMySQLDB to connect to the database and query all data from table tips
+	conn := ConnectMySQLDB()
+	sqlQuery := `SELECT
+								T.id,
+								T.tip
+							FROM
+								tips T
+							ORDER BY RAND()
+							LIMIT 1;`
+	rows, err := conn.Query(sqlQuery)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer conn.Close()
+	// iterate over the rows using struct tip
+	var result []interface{}
+	for rows.Next() {
+		var t tip
+		// scan the current row into the struct
+		err = rows.Scan(&t.Id, &t.Tip)
+		if err != nil {
+			panic(err.Error())
+		}
+		// add the tip struct to the result array
+		result = append(result, t)
+	}
+
+	return result
+}
+
+func findAllPuntosLimpios() []interface{} {
+	// use ConnectMySQLDB to connect to the database and query all data from table puntos_limpios
+	conn := ConnectMySQLDB()
+	sqlQuery := `SELECT
+								P.id,
+								P.nombre,
+								P.latitud,
+								P.longitud,
+								P.descripcion
+							FROM
+								puntos_limpios P;`
+	rows, err := conn.Query(sqlQuery)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer conn.Close()
+	// iterate over the rows using struct puntos_limpios
+	var result []interface{}
+	for rows.Next() {
+		var p puntoLimpio
+		// scan the current row into the struct
+		err = rows.Scan(&p.Id, &p.Nombre, &p.Latitud, &p.Longitud, &p.Descripcion)
+		if err != nil {
+			panic(err.Error())
+		}
+		// add the puntos_limpios struct to the result array
+		result = append(result, p)
+	}
+	return result
+}
+
+func sendRecoleccionData(data recoleccionData) bool {
+	// use ConnectMySQLDB to connect to the database and query all data from table puntos_limpios
+	conn := ConnectMySQLDB()
+	sqlQuery := `INSERT INTO
+								recolecciones (
+									tipo,
+									peso,
+									dimensiones,
+									direccion,
+									ciudad,
+									nombre,
+									telefono,
+									correo)
+							VALUES (
+								?, ?, ?, ?, ?, ?, ?, ?);`
+	stmt, err := conn.Prepare(sqlQuery)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer conn.Close()
+	// execute the prepared statement
+	_, err = stmt.Exec(data.Tipo, data.Peso, data.Dimensiones, data.Direccion, data.Ciudad, data.Nombre, data.Telefono, data.Correo)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// send the email
+	if sendEmail() {
+		return true
+	} else {
+		return false
+	}
+
+}
