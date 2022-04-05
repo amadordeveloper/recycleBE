@@ -251,7 +251,7 @@ func sendRecoleccionData(data recoleccionData) bool {
 	}
 
 	// send the email
-	if sendEmail() {
+	if sendEmail(data) {
 		return true
 	} else {
 		return false

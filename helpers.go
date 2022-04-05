@@ -117,20 +117,35 @@ func ConnectMySQLDB() *sql.DB {
 	return db
 }
 
-func sendEmail() bool {
+func sendEmail(data recoleccionData) bool {
 	from := getEnv("EMAIL_USER", "")
 	password := getEnv("EMAIL_PASS", "")
 	to := []string{"jota5557apolo@gmail.com"}
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 
-	message := []byte("My super secret message.")
+	subject := "Recoleccion de residuos"
+	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+	// template html email
+	html := `<h2>Solicitud de Recolección</h2><br>
+				<b>Nombre:</b> ` + data.Nombre + `<br>
+				<b>Correo:</b> ` + data.Correo + `<br>
+				<b>Telefono:</b> ` + data.Telefono + `<br>
+				<b>Direccion:</b> ` + data.Direccion + `<br>
+				<b>Ciudad:</b> ` + data.Ciudad + `<br>
+				<b>Tipo:</b> ` + data.Tipo + `<br>
+				<b>Dimensiones:</b> ` + data.Dimensiones + `<br>
+				<b>Peso:</b> ` + data.Peso + `<br>`
 
-	// Create authentication
-	auth := smtp.PlainAuth("", from, password, smtpHost)
+	msg := []byte(subject + mime + html)
 
-	// Send actual message
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+	// send html email
+	err := smtp.SendMail(smtpHost+":"+smtpPort,
+		smtp.PlainAuth("", from, password, smtpHost),
+		from,
+		to,
+		msg)
+
 	if err != nil {
 		log.Fatal(err)
 	}
