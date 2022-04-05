@@ -1,5 +1,11 @@
 package main
 
+import (
+	"log"
+
+	"github.com/gin-gonic/gin"
+)
+
 func findAllResiduos() []interface{} {
 	// use ConnectMySQLDB to connect to the database and query all data from table residuos
 
@@ -144,7 +150,10 @@ func findAllTips() []interface{} {
 								tips T;`
 	rows, err := conn.Query(sqlQuery)
 	if err != nil {
-		panic(err.Error())
+		log.Panic(err.Error())
+		handlers := gin.New()
+		handlers.Use(gin.Logger())
+		handlers.Use(gin.Recovery())
 	}
 	defer conn.Close()
 	// iterate over the rows using struct tip
@@ -154,7 +163,10 @@ func findAllTips() []interface{} {
 		// scan the current row into the struct
 		err = rows.Scan(&t.Id, &t.Tip)
 		if err != nil {
-			panic(err.Error())
+			log.Panic(err.Error())
+			handlers := gin.New()
+			handlers.Use(gin.Logger())
+			handlers.Use(gin.Recovery())
 		}
 		// add the tip struct to the result array
 		result = append(result, t)

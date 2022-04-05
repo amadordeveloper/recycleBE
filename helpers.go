@@ -124,7 +124,7 @@ func sendEmail(data recoleccionData) bool {
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 
-	subject := "Recoleccion de residuos"
+	subject := "Subject: Recoleccion de residuos\n"
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 	// template html email
 	html := `<h2>Solicitud de Recolección</h2><br>
