@@ -47,6 +47,11 @@ type recoleccionData struct {
 	Telefono    string `json:"telefono"`
 }
 
+type responseStruct struct {
+	Status  bool   `json:"status"`
+	Message string `json:"message"`
+}
+
 /* Add methods */
 func (s residuo) NombreResiduo() string {
 	return s.Nombre
@@ -77,6 +82,15 @@ func main() {
 	// handler mostrar imagen desde el servidor
 	r.GET("/archivos/:folder/:name", func(c *gin.Context) {
 		c.File("public/archivos/" + c.Param("folder") + "/" + c.Param("name"))
+	})
+
+	// handle error 500 and 404
+	r.NoRoute(func(c *gin.Context) {
+		c.String(http.StatusNotFound, "The incorrect API route")
+	})
+
+	r.NoMethod(func(c *gin.Context) {
+		c.String(http.StatusNotFound, "The incorrect API route")
 	})
 
 	r.Run(":8080")

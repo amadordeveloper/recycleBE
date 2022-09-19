@@ -91,7 +91,11 @@ func findResiduosByClave(keyword string) interface{} {
 							AND
 								CR.id_clave = C.id
 							AND R.id_destino = D.id
-							AND C.clave LIKE ?;`
+							AND C.clave LIKE ?
+							GROUP BY R.id
+							ORDER BY R.nombre;
+							`
+
 	rows, err := conn.Query(sqlQuery, "%"+keyword+"%")
 
 	if err != nil {
@@ -236,8 +240,14 @@ func findAllPuntosLimpios() []interface{} {
 	return result
 }
 
-func sendRecoleccionData(data recoleccionData) bool {
+func sendRecoleccionData(data recoleccionData) responseStruct {
 	// use ConnectMySQLDB to connect to the database and query all data from table puntos_limpios
+	//data.Tipo, data.Peso, data.Dimensiones, data.Direccion, data.Ciudad, data.Nombre, data.Telefono, data.Correo
+
+	if data.Tipo == "" || data.Peso == "" || data.Dimensiones == "" || data.Direccion == "" || data.Ciudad == "" || data.Nombre == "" || data.Telefono == "" || data.Correo == "" {
+		return responseStruct{Status: false, Message: "Todos los campos son obligatorios"}
+	}
+
 	conn := ConnectMySQLDB()
 	sqlQuery := `INSERT INTO
 								recolecciones (
@@ -264,9 +274,9 @@ func sendRecoleccionData(data recoleccionData) bool {
 
 	// send the email
 	if sendEmail(data) {
-		return true
+		return responseStruct{Status: true, Message: "Solicitud de recolección registrada con éxito"}
 	} else {
-		return false
+		return responseStruct{Status: false, Message: "Error al enviar el correo"}
 	}
 
 }

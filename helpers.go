@@ -118,9 +118,22 @@ func ConnectMySQLDB() *sql.DB {
 }
 
 func sendEmail(data recoleccionData) bool {
+
+	// select from db configuraciones where key = "email"
+	db := ConnectMySQLDB()
+	defer db.Close()
+	query := "SELECT valor FROM configuraciones WHERE clave = 'correo'"
+	row := db.QueryRow(query)
+	var email string
+	err := row.Scan(&email)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
 	from := getEnv("EMAIL_USER", "")
 	password := getEnv("EMAIL_PASS", "")
-	to := []string{"jota5557apolo@gmail.com"}
+	to := []string{email}
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 
@@ -140,7 +153,7 @@ func sendEmail(data recoleccionData) bool {
 	msg := []byte(subject + mime + html)
 
 	// send html email
-	err := smtp.SendMail(smtpHost+":"+smtpPort,
+	err = smtp.SendMail(smtpHost+":"+smtpPort,
 		smtp.PlainAuth("", from, password, smtpHost),
 		from,
 		to,

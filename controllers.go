@@ -13,8 +13,13 @@ func getAllResiduos(c *gin.Context) {
 }
 
 func findByClave(c *gin.Context) {
-	result := findResiduosByClave(c.Param("clave"))
-	c.IndentedJSON(200, result)
+	if c.Param("clave") != "" {
+		result := findResiduosByClave(c.Param("clave"))
+		c.IndentedJSON(200, result)
+	} else {
+		result := findAllResiduos()
+		c.IndentedJSON(200, result)
+	}
 }
 
 func getAllTips(c *gin.Context) {
@@ -34,10 +39,8 @@ func getRandomTip(c *gin.Context) {
 
 func sendRecoleccionDataToEmail(c *gin.Context) {
 	// print to the console json data from POST request
-	/*jsonData, err := c.GetRawData()
-	if err != nil {
-		fmt.Println(err)
-	}*/
+	// create struct resp{ status message }
+
 	var data recoleccionData
 	err := c.BindJSON(&data)
 	if err != nil {
@@ -45,14 +48,14 @@ func sendRecoleccionDataToEmail(c *gin.Context) {
 	}
 	resp := sendRecoleccionData(data)
 	var response gin.H
-	if resp == true {
+	if resp.Status == true {
 		response = gin.H{
-			"message": "Email sent successfully",
+			"message": resp.Message,
 			"status":  "success",
 		}
 	} else {
 		response = gin.H{
-			"message": "Email not sent",
+			"message": resp.Message,
 			"status":  "error",
 		}
 	}
