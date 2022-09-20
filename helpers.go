@@ -2,9 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"log"
 	"math/rand"
-	"net/smtp"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -120,7 +118,7 @@ func ConnectMySQLDB() *sql.DB {
 func sendEmail(data recoleccionData) bool {
 
 	// select from db configuraciones where key = "email"
-	db := ConnectMySQLDB()
+	/*db := ConnectMySQLDB()
 	defer db.Close()
 	query := "SELECT valor FROM configuraciones WHERE clave = 'correo'"
 	row := db.QueryRow(query)
@@ -161,6 +159,6 @@ func sendEmail(data recoleccionData) bool {
 
 	if err != nil {
 		log.Fatal(err)
-	}
+	}*/
 	return true
 }
