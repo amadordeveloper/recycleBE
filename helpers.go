@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"encoding/base64"
+	"log"
 	"math/rand"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/gmail/v1"
+	"google.golang.org/api/option"
 )
 
 func getEnv(key, fallback string) string {
@@ -118,7 +124,7 @@ func ConnectMySQLDB() *sql.DB {
 func sendEmail(data recoleccionData) bool {
 
 	// select from db configuraciones where key = "email"
-	/*db := ConnectMySQLDB()
+	db := ConnectMySQLDB()
 	defer db.Close()
 	query := "SELECT valor FROM configuraciones WHERE clave = 'correo'"
 	row := db.QueryRow(query)
@@ -129,36 +135,47 @@ func sendEmail(data recoleccionData) bool {
 		return false
 	}
 
-	from := getEnv("EMAIL_USER", "")
-	password := getEnv("EMAIL_PASS", "")
-	to := []string{email}
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-
-	subject := "Subject: Recoleccion de residuos\n"
-	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-	// template html email
-	html := `<h2>Solicitud de Recolección</h2><br>
-				<b>Nombre:</b> ` + data.Nombre + `<br>
-				<b>Correo:</b> ` + data.Correo + `<br>
-				<b>Telefono:</b> ` + data.Telefono + `<br>
-				<b>Direccion:</b> ` + data.Direccion + `<br>
-				<b>Ciudad:</b> ` + data.Ciudad + `<br>
-				<b>Tipo:</b> ` + data.Tipo + `<br>
-				<b>Dimensiones:</b> ` + data.Dimensiones + `<br>
-				<b>Peso:</b> ` + data.Peso + `<br>`
-
-	msg := []byte(subject + mime + html)
-
-	// send html email
-	err = smtp.SendMail(smtpHost+":"+smtpPort,
-		smtp.PlainAuth("", from, password, smtpHost),
-		from,
-		to,
-		msg)
-
+	ctx := context.Background()
+	b, err := os.ReadFile("credentials.json")
 	if err != nil {
-		log.Fatal(err)
-	}*/
+		log.Fatalf("Unable to read client secret file: %v", err)
+	}
+
+	// If modifying these scopes, delete your previously saved token.json.
+	config, err := google.ConfigFromJSON(b, gmail.GmailSendScope)
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+
+	client := getClient(config)
+
+	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		log.Fatalf("Unable to retrieve Gmail client: %v", err)
+	}
+
+	message := "From: recycleappbucaramanga@gmail.com\r\n" +
+		"To: " + email + "\r\n" +
+		"Subject: " + "Nueva recoleccion" + "\r\n"
+	message += "Content-Type: text/html; charset=\"UTF-8\"\r\n"
+
+	message += "\r\n" + "<b>Se ha registrado una nueva solicitud de recoleccion</b><br/>" + "\r\n" +
+		"<b>Nombre: </b>" + data.Nombre + "<br/>" + "\r\n" +
+		"<b>Correo: </b>" + data.Correo + "<br/>" + "\r\n" +
+		"<b>Telefono: </b>" + data.Telefono + "<br/>" + "\r\n" +
+		"<b>Direccion: </b>" + data.Direccion + "<br/>" + "\r\n" +
+		"<b>Ciudad: </b>" + data.Ciudad + "<br/>" + "\r\n" +
+		"<b>Tipo: </b>" + data.Tipo + "<br/>" + "\r\n" +
+		"<b>Dimensiones: </b>" + data.Dimensiones + "<br/>" + "\r\n" +
+		"<b>Peso: </b>" + data.Peso + "<br/>" + "\r\n"
+
+	// Send the message
+	_, err = srv.Users.Messages.Send("me", &gmail.Message{
+		Raw: base64.URLEncoding.EncodeToString([]byte(message)),
+	}).Do()
+	if err != nil {
+		log.Fatalf("Unable to send message. %v", err)
+	}
+
 	return true
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	gmail "google.golang.org/api/gmail/v1"
+	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 )
 
@@ -102,8 +102,6 @@ func main() {
 		c.String(http.StatusNotFound, "The incorrect API route")
 	})
 
-	r.Run(":80")
-
 	ctx := context.Background()
 	b, err := os.ReadFile("credentials.json")
 	if err != nil {
@@ -111,30 +109,18 @@ func main() {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope)
+	config, err := google.ConfigFromJSON(b, gmail.GmailSendScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
 	client := getClient(config)
 
-	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
+	_, err = gmail.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf("Unable to retrieve Gmail client: %v", err)
 	}
 
-	user := "me"
-	re, err := srv.Users.Labels.List(user).Do()
-	if err != nil {
-		log.Fatalf("Unable to retrieve labels: %v", err)
-	}
-	if len(re.Labels) == 0 {
-		fmt.Println("No labels found.")
-		return
-	}
-	fmt.Println("Labels:")
-	for _, l := range re.Labels {
-		fmt.Printf("- %s\n", l.Name)
-	}
+	r.Run(":80")
 
 }
 
