@@ -122,8 +122,6 @@ func ConnectMySQLDB() *sql.DB {
 }
 
 func sendEmail(data recoleccionData) bool {
-
-	// select from db configuraciones where key = "email"
 	db := ConnectMySQLDB()
 	defer db.Close()
 	query := "SELECT valor FROM configuraciones WHERE clave = 'correo'"

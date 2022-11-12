@@ -7,8 +7,6 @@ import (
 )
 
 func findAllResiduos() []interface{} {
-	// use ConnectMySQLDB to connect to the database and query all data from table residuos
-
 	conn := ConnectMySQLDB()
 	sqlQuery := `SELECT
 								R.id,
@@ -28,16 +26,15 @@ func findAllResiduos() []interface{} {
 		panic(err.Error())
 	}
 	defer conn.Close()
-	// iterate over the rows using struct residuo
+
 	var result []interface{}
 	for rows.Next() {
 		var r residuo
-		// scan the current row into the struct transforming claves into an array of strings
 		err = rows.Scan(&r.Id, &r.Nombre, &r.Destino, &r.Impacto, &r.Aprovechamiento, &r.Descripcion)
 		if err != nil {
 			panic(err.Error())
 		}
-		// query the claves table and get the claves for the current residuo
+
 		sqlQuery := `SELECT
 										C.clave as claves
 									FROM
@@ -62,17 +59,15 @@ func findAllResiduos() []interface{} {
 			}
 			claves = append(claves, c.Clave)
 		}
-		// add the claves array to the residuo struct
+
 		r.Claves = claves
-		// add the residuo struct to the result array
+
 		result = append(result, r)
 	}
 	return result
 }
 
 func findResiduosByClave(keyword string) interface{} {
-	// use ConnectMySQLDB to connect to the database and query all data from table residuos where clave LIKE %keyword%
-
 	conn := ConnectMySQLDB()
 	sqlQuery := `SELECT
 								R.id,
@@ -95,23 +90,20 @@ func findResiduosByClave(keyword string) interface{} {
 							GROUP BY R.id
 							ORDER BY R.nombre;
 							`
-
 	rows, err := conn.Query(sqlQuery, "%"+keyword+"%")
-
 	if err != nil {
 		panic(err.Error())
 	}
 	defer conn.Close()
-	// iterate over the rows using struct residuo
 	var result []interface{}
+
 	for rows.Next() {
 		var r residuo
-		// scan the current row into the struct transforming claves into an array of strings
 		err = rows.Scan(&r.Id, &r.Nombre, &r.Destino, &r.Impacto, &r.Aprovechamiento, &r.Descripcion)
 		if err != nil {
 			panic(err.Error())
 		}
-		// query the claves table and get the claves for the current residuo
+
 		sqlQuery := `SELECT
 										C.clave as claves
 									FROM
@@ -136,16 +128,14 @@ func findResiduosByClave(keyword string) interface{} {
 			}
 			claves = append(claves, c.Clave)
 		}
-		// add the claves array to the residuo struct
+
 		r.Claves = claves
-		// add the residuo struct to the result array
 		result = append(result, r)
 	}
 	return result
 }
 
 func findAllTips() []interface{} {
-	// use ConnectMySQLDB to connect to the database and query all data from table tips
 	conn := ConnectMySQLDB()
 	sqlQuery := `SELECT
 								T.id,
@@ -160,11 +150,9 @@ func findAllTips() []interface{} {
 		handlers.Use(gin.Recovery())
 	}
 	defer conn.Close()
-	// iterate over the rows using struct tip
 	var result []interface{}
 	for rows.Next() {
 		var t tip
-		// scan the current row into the struct
 		err = rows.Scan(&t.Id, &t.Tip)
 		if err != nil {
 			log.Panic(err.Error())
@@ -172,14 +160,14 @@ func findAllTips() []interface{} {
 			handlers.Use(gin.Logger())
 			handlers.Use(gin.Recovery())
 		}
-		// add the tip struct to the result array
+
 		result = append(result, t)
 	}
 	return result
 }
 
 func findRandomTip() []interface{} {
-	// use ConnectMySQLDB to connect to the database and query all data from table tips
+
 	conn := ConnectMySQLDB()
 	sqlQuery := `SELECT
 								T.id,
@@ -193,16 +181,14 @@ func findRandomTip() []interface{} {
 		panic(err.Error())
 	}
 	defer conn.Close()
-	// iterate over the rows using struct tip
 	var result []interface{}
 	for rows.Next() {
 		var t tip
-		// scan the current row into the struct
 		err = rows.Scan(&t.Id, &t.Tip)
 		if err != nil {
 			panic(err.Error())
 		}
-		// add the tip struct to the result array
+
 		result = append(result, t)
 	}
 
@@ -210,7 +196,6 @@ func findRandomTip() []interface{} {
 }
 
 func findAllPuntosLimpios() []interface{} {
-	// use ConnectMySQLDB to connect to the database and query all data from table puntos_limpios
 	conn := ConnectMySQLDB()
 	sqlQuery := `SELECT
 								P.id,
@@ -225,26 +210,29 @@ func findAllPuntosLimpios() []interface{} {
 		panic(err.Error())
 	}
 	defer conn.Close()
-	// iterate over the rows using struct puntos_limpios
+
 	var result []interface{}
 	for rows.Next() {
 		var p puntoLimpio
-		// scan the current row into the struct
 		err = rows.Scan(&p.Id, &p.Nombre, &p.Latitud, &p.Longitud, &p.Descripcion)
 		if err != nil {
 			panic(err.Error())
 		}
-		// add the puntos_limpios struct to the result array
+
 		result = append(result, p)
 	}
 	return result
 }
 
 func sendRecoleccionData(data recoleccionData) responseStruct {
-	// use ConnectMySQLDB to connect to the database and query all data from table puntos_limpios
-	//data.Tipo, data.Peso, data.Dimensiones, data.Direccion, data.Ciudad, data.Nombre, data.Telefono, data.Correo
-
-	if data.Tipo == "" || data.Peso == "" || data.Dimensiones == "" || data.Direccion == "" || data.Ciudad == "" || data.Nombre == "" || data.Telefono == "" || data.Correo == "" {
+	if data.Tipo == "" ||
+		data.Peso == "" ||
+		data.Dimensiones == "" ||
+		data.Direccion == "" ||
+		data.Ciudad == "" ||
+		data.Nombre == "" ||
+		data.Telefono == "" ||
+		data.Correo == "" {
 		return responseStruct{Status: false, Message: "Todos los campos son obligatorios"}
 	}
 
@@ -266,17 +254,28 @@ func sendRecoleccionData(data recoleccionData) responseStruct {
 		panic(err.Error())
 	}
 	defer conn.Close()
-	// execute the prepared statement
-	_, err = stmt.Exec(data.Tipo, data.Peso, data.Dimensiones, data.Direccion, data.Ciudad, data.Nombre, data.Telefono, data.Correo)
+	_, err = stmt.Exec(data.Tipo,
+		data.Peso,
+		data.Dimensiones,
+		data.Direccion,
+		data.Ciudad,
+		data.Nombre,
+		data.Telefono,
+		data.Correo)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	// send the email
 	if sendEmail(data) {
-		return responseStruct{Status: true, Message: "Solicitud de recolección registrada con éxito"}
+		return responseStruct{
+			Status:  true,
+			Message: "Solicitud de recolección registrada con éxito",
+		}
 	} else {
-		return responseStruct{Status: false, Message: "Error al enviar el correo"}
+		return responseStruct{
+			Status:  false,
+			Message: "Error al enviar el correo",
+		}
 	}
 
 }

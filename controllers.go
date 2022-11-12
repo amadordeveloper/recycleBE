@@ -7,7 +7,6 @@ import (
 )
 
 func getAllResiduos(c *gin.Context) {
-
 	result := findAllResiduos()
 	c.IndentedJSON(200, result)
 }
@@ -38,9 +37,6 @@ func getRandomTip(c *gin.Context) {
 }
 
 func sendRecoleccionDataToEmail(c *gin.Context) {
-	// print to the console json data from POST request
-	// create struct resp{ status message }
-
 	var data recoleccionData
 	err := c.BindJSON(&data)
 	if err != nil {
